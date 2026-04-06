@@ -144,7 +144,7 @@ print("KNN Accuracy:", round(
 # -------------------------
 os.makedirs("models", exist_ok=True)
 
-model.save("models/lstm_model.h5")
+model.save("models/lstm_model")
 pickle.dump(scaler, open("models/scaler.pkl","wb"))
 pickle.dump(knn, open("models/knn_model.pkl","wb"))
 
