@@ -29,12 +29,21 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
+from contextlib import asynccontextmanager
 import numpy as np
 import pickle
 import os
 from datetime import datetime, timedelta
 
-app = FastAPI(title="NaariCare ML API", version="3.0.0")
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app_instance: FastAPI):
+    # Models are already loaded at module level above.
+    # This ensures the port is bound before any heavy work blocks startup.
+    yield
+
+app = FastAPI(title="NaariCare ML API", version="3.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -85,7 +94,10 @@ try:
     MENS_LOADED = True
     try:
         from tensorflow.keras.models import load_model
-        mens_lstm   = load_model(os.path.join(MENS_DIR, "lstm_model.h5"))
+        lstm_path = os.path.join(MENS_DIR, "lstm_model")          # SavedModel dir
+        if not os.path.exists(lstm_path):
+            lstm_path = os.path.join(MENS_DIR, "lstm_model.h5")   # fallback legacy
+        mens_lstm   = load_model(lstm_path)
         LSTM_LOADED = True
         print("✅ Menstrual LSTM loaded")
     except Exception as e:
